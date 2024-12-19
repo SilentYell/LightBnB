@@ -28,7 +28,11 @@ const getUserWithEmail = function (email) {
   return pool
     .query(`SELECT * FROM users WHERE email = $1 LIMIT 1;`, [email])
     .then((response) => {
-      return response.rows[0] || null; // Return the first user or null
+      if (response.rows[0]) {
+        return response.rows[0];
+      } else {
+        throw new Error(`User with email ${email} not found`);
+      }
     })
     .catch((err) => {
       console.error('Error executing getUserWithEmail query', err.stack);
@@ -45,7 +49,11 @@ const getUserWithId = function (id) {
   return pool
     .query(`SELECT * FROM users WHERE id = $1 LIMIT 1;`, [id])
     .then((response) => {
-      return response.rows[0] || null; // Return the first user or null
+      if (response.rows[0]) {
+        return response.rows[0];
+      } else {
+        throw new Error(`User with id ${id} not found`);
+      }
     })
     .catch((err) => {
       console.error('Error executing getUserWithId query', err.stack);
