@@ -130,15 +130,72 @@ const getAllReservations = function (guest_id, limit = 10) {
  * @param {number} limit The number of results to return.
  * @return {Promise<[{}]>} A promise to the properties.
  */
-const getAllProperties = (options, limit = 10) => {
+const getAllProperties = function (options, limit = 10) {
+  // 1. Array to hold query parameters
+  const queryParams = [];
+
+  // 2. Start the query
+  let queryString = `
+    SELECT properties.*, avg(property_reviews.rating) as average_rating
+    FROM properties
+    LEFT JOIN property_reviews ON properties.id = property_reviews.property_id
+  `;
+
+  // 3. Dynamically build the WHERE clause based on the options provided
+  const conditions = [];
+
+  // Filter by city
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    conditions.push(`city LIKE $${queryParams.length}`);
+  }
+
+  // Filter by owner_id
+  if (options.owner_id) {
+    queryParams.push(options.owner_id);
+    conditions.push(`owner_id = $${queryParams.length}`);
+  }
+
+  // Filter by price range (minimum and maximum price per night)
+  if (options.minimum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night * 100); // Convert dollars to cents
+    conditions.push(`cost_per_night >= $${queryParams.length}`);
+  }
+
+  if (options.maximum_price_per_night) {
+    queryParams.push(options.maximum_price_per_night * 100); // Convert dollars to cents
+    conditions.push(`cost_per_night <= $${queryParams.length}`);
+  }
+
+  // Filter by minimum rating
+  if (options.minimum_rating) {
+    queryParams.push(options.minimum_rating);
+    conditions.push(`avg(property_reviews.rating) >= $${queryParams.length}`);
+  }
+
+  // Add the WHERE clause if there are any conditions
+  if (conditions.length > 0) {
+    queryString += `WHERE ${conditions.join(' AND ')} `;
+  }
+
+  // 4. Add the GROUP BY, ORDER BY, and LIMIT clauses
+  queryParams.push(limit);
+  queryString += `
+    GROUP BY properties.id
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length};
+  `;
+
+  // 5. Log the query for debugging
+  console.log(queryString, queryParams);
+
+  // 6. Execute the query
   return pool
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
-    .then((result) => {
-      console.log(result.rows);
-      return result.rows;
-    })
+    .query(queryString, queryParams)
+    .then((res) => res.rows)
     .catch((err) => {
-      console.log(err.message);
+      console.error("Error executing query", err.stack);
+      throw err;
     });
 };
 
