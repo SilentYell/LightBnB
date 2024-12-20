@@ -136,7 +136,7 @@ const getAllProperties = function (options, limit = 10) {
 
   // 2. Start the query
   let queryString = `
-    SELECT properties.*, avg(property_reviews.rating) as average_rating
+    SELECT properties.*, avg(property_reviews.rating) as average_rating,
     FROM properties
     LEFT JOIN property_reviews ON properties.id = property_reviews.property_id
   `;
@@ -157,12 +157,14 @@ const getAllProperties = function (options, limit = 10) {
   }
 
   // Filter by price range (minimum and maximum price per night)
-  if (options.minimum_price_per_night) {
+  if (options.minimum_price_per_night && options.maximum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night * 100); // Convert dollars to cents
+    queryParams.push(options.maximum_price_per_night * 100); // Convert dollars to cents
+    conditions.push(`cost_per_night BETWEEN $${queryParams.length - 1} AND $${queryParams.length}`);
+  } else if (options.minimum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100); // Convert dollars to cents
     conditions.push(`cost_per_night >= $${queryParams.length}`);
-  }
-
-  if (options.maximum_price_per_night) {
+  } else if (options.maximum_price_per_night) {
     queryParams.push(options.maximum_price_per_night * 100); // Convert dollars to cents
     conditions.push(`cost_per_night <= $${queryParams.length}`);
   }
