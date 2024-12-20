@@ -24,7 +24,7 @@ pool.query(`SELECT title FROM properties LIMIT 10;`)
  * @param {String} email The email of the user.
  * @return {Promise<{}>} A promise to the user object or null.
  */
-const getUserWithEmail = function (email) {
+const getUserWithEmail = function(email) {
   return pool
     .query(`SELECT * FROM users WHERE email = $1 LIMIT 1;`, [email])
     .then((response) => {
@@ -45,7 +45,7 @@ const getUserWithEmail = function (email) {
  * @param {string} id The id of the user.
  * @return {Promise<{}>} A promise to the user object or null.
  */
-const getUserWithId = function (id) {
+const getUserWithId = function(id) {
   return pool
     .query(`SELECT * FROM users WHERE id = $1 LIMIT 1;`, [id])
     .then((response) => {
@@ -66,13 +66,13 @@ const getUserWithId = function (id) {
  * @param {{name: string, password: string, email: string}} user The user object.
  * @return {Promise<{}>} A promise to the newly added user object.
  */
-const addUser = function (user) {
+const addUser = function(user) {
   const { name, email, password } = user;
   return pool
     .query(
       `INSERT INTO users (name, email, password)
        VALUES ($1, $2, $3)
-       RETURNING *;`, 
+       RETURNING *;`,
       [name, email, password]
     )
     .then((response) => {
@@ -91,8 +91,24 @@ const addUser = function (user) {
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function (guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+const getAllReservations = function(guest_id, limit = 10) {
+  const query = `
+    SELECT reservations.*, properties.*
+    FROM reservations
+    JOIN properties ON reservations.property_id = properties.id
+    WHERE reservations.guest_id = $1
+    ORDER BY reservations.start_date
+    LIMIT $2;
+  `;
+  const values = [guest_id, limit];
+
+  return pool
+    .query(query, values)
+    .then((result) => result.rows)
+    .catch((err) => {
+      console.error('Error executing query', err.stack);
+      throw err;
+    });
 };
 
 /// Properties
