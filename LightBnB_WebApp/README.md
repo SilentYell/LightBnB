@@ -13,7 +13,7 @@ LightBnB is a simple multi-page Airbnb clone that uses server-side JavaScript to
 ### Home Page
 ![Home Page](https://github.com/SilentYell/LightBnB/blob/main/images/main_page.jpeg?raw=true)
 
-### Property Details Page
+### Search Page
 ![Search Page](https://github.com/SilentYell/LightBnB/blob/main/images/search.jpeg?raw=true)
 
 ## Setup
