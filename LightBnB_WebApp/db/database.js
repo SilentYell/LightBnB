@@ -224,7 +224,7 @@ const addProperty = function (property) {
     property.description,
     property.thumbnail_photo_url,
     property.cover_photo_url,
-    Math.round(property.cost_per_night * 100), // Convert to cents and round to avoid floating-point issues
+    Math.round(property.cost_per_night * 100),
     property.street,
     property.city,
     property.province,
